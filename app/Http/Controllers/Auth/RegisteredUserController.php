@@ -38,6 +38,8 @@ class RegisteredUserController extends Controller
             'surname' => $request->surname,
         ]);
 
+        $user->assignRole('patient');
+
         event(new Registered($user));
 
         Auth::login($user);

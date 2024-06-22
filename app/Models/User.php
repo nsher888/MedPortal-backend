@@ -6,10 +6,11 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasRoles;
 
     /**
      * The attributes that are mass assignable.
@@ -23,6 +24,7 @@ class User extends Authenticatable
         'idNumber',
         'dateOfBirth',
         'surname',
+        'clinic_id',
     ];
 
     /**
@@ -34,6 +36,16 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    public function clinic()
+    {
+        return $this->belongsTo(User::class, 'clinic_id');
+    }
+
+    public function doctors()
+    {
+        return $this->hasMany(User::class, 'clinic_id');
+    }
 
     /**
      * Get the attributes that should be cast.
