@@ -25,7 +25,7 @@ class AppServiceProvider extends ServiceProvider
             return config('app.frontend_url') . "/password-reset/$token?email={$notifiable->getEmailForPasswordReset()}";
         });
 
-        if (config('app.env') === 'production' || config('app.env') === 'staging') {
+        if (config('APP_ENV') === 'production' || config('APP_ENV') === 'staging') {
             URL::forceScheme('https');
         }
     }
