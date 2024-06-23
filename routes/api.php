@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DoctorController;
+use App\Http\Controllers\ResultController;
 use App\Http\Controllers\TypeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -32,3 +33,13 @@ Route::post('/doctors', [DoctorController::class, 'store']);
 
 
 Route::get('/types', [TypeController::class, 'index']);
+
+
+
+Route::middleware(['auth:sanctum'])->group(function () {
+    Route::get('/results', [ResultController::class, 'index']);
+    Route::post('/results', [ResultController::class, 'store']);
+    Route::get('/results/{id}', [ResultController::class, 'show']);
+    Route::put('/results/{id}', [ResultController::class, 'update']);
+    Route::delete('/results/{id}', [ResultController::class, 'destroy']);
+});

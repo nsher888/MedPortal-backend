@@ -47,6 +47,16 @@ class User extends Authenticatable
         return $this->hasMany(User::class, 'clinic_id');
     }
 
+    public function clinicResults()
+    {
+        return $this->hasMany(Result::class, 'clinic_id');
+    }
+
+    public function doctorResults()
+    {
+        return $this->belongsToMany(Result::class, 'doctor_result', 'doctor_id', 'result_id');
+    }
+
     /**
      * Get the attributes that should be cast.
      *
