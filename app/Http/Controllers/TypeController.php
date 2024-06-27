@@ -7,9 +7,10 @@ use Illuminate\Http\Request;
 
 class TypeController extends Controller
 {
+
     public function index()
     {
-        $types = Type::all();
+        $types = Type::all()->toArray();
         return response()->json($types);
     }
 }

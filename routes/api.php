@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\DoctorController;
+use App\Http\Controllers\ResultController;
 use App\Http\Controllers\TypeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -32,3 +33,11 @@ Route::post('/doctors', [DoctorController::class, 'store']);
 
 
 Route::get('/types', [TypeController::class, 'index']);
+
+
+Route::post('/test-results', [ResultController::class, 'store']);
+Route::get('/test-results', [ResultController::class, 'index']);
+Route::delete('/test-results/{id}', [ResultController::class, 'destroy']);
+Route::get('/test-results/{id}', [ResultController::class, 'show']);
+
+Route::post('/test-results/{id}', [ResultController::class, 'update']);
