@@ -35,11 +35,9 @@ Route::post('/doctors', [DoctorController::class, 'store']);
 Route::get('/types', [TypeController::class, 'index']);
 
 
+Route::post('/test-results', [ResultController::class, 'store']);
+Route::get('/test-results', [ResultController::class, 'index']);
+Route::delete('/test-results/{id}', [ResultController::class, 'destroy']);
+Route::get('/test-results/{id}', [ResultController::class, 'show']);
 
-Route::middleware(['auth:sanctum'])->group(function () {
-    Route::get('/results', [ResultController::class, 'index']);
-    Route::post('/results', [ResultController::class, 'store']);
-    Route::get('/results/{id}', [ResultController::class, 'show']);
-    Route::put('/results/{id}', [ResultController::class, 'update']);
-    Route::delete('/results/{id}', [ResultController::class, 'destroy']);
-});
+Route::post('/test-results/{id}', [ResultController::class, 'update']);

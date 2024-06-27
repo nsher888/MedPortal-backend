@@ -10,7 +10,6 @@ class AddClinicIdToUsersTable extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->unsignedBigInteger('clinic_id')->nullable()->after('id');
-
             $table->foreign('clinic_id')->references('id')->on('users')->onDelete('cascade');
         });
     }
