@@ -48,28 +48,26 @@ class ResultController extends Controller
         return response()->json(['message' => 'Test result added successfully', 'data' => $testResult], 201);
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $user = Auth::user();
+        $perPage = $request->input('per_page', 10);
 
         if ($user->hasRole('clinic')) {
-            $results = Result::where('clinic_id', $user->id)->get();
+            $results = Result::where('clinic_id', $user->id)
+                ->orderBy('created_at', 'desc')
+                ->paginate($perPage);
         } elseif ($user->hasRole('doctor')) {
             $results = Result::all()->filter(function ($result) use ($user) {
                 $doctorIds = json_decode($result->doctor_ids, true);
-                Log::info('Doctor IDs in Result:', ['doctor_ids' => $doctorIds]);
                 return in_array($user->id, $doctorIds);
             })->values();
-
-            Log::info('Doctor ID:', ['doctor_id' => $user->id]);
-            Log::info('Filtered Results for Doctor:', $results->toArray());
+            $results = collect($results)->forPage($request->input('page', 1), $perPage);
         } else {
             return response()->json(['message' => 'Unauthorized user role'], 403);
         }
 
-
-
-        $results = $results->map(function ($result) {
+        $results->transform(function ($result) {
             return [
                 'id' => $result->id,
                 'patientName' => $result->patientName,
@@ -85,7 +83,12 @@ class ResultController extends Controller
             ];
         });
 
-        return response()->json($results->values()->all());
+        return response()->json([
+            'data' => $results,
+            'current_page' => $request->input('page', 1),
+            'last_page' => $results->lastPage(),
+            'total' => $results->total()
+        ]);
     }
 
     public function destroy($id)
