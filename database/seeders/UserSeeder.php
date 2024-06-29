@@ -40,7 +40,7 @@ class UserSeeder extends Seeder
         }
 
         // Create doctor users using the factory
-        User::factory()->count(10)->create();
+        User::factory()->count(50)->create();
 
         // Create default patient users
         $patients = [

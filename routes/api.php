@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\ResultController;
+use App\Http\Controllers\StatisticController;
 use App\Http\Controllers\TypeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -41,3 +42,6 @@ Route::delete('/test-results/{id}', [ResultController::class, 'destroy']);
 Route::get('/test-results/{id}', [ResultController::class, 'show']);
 
 Route::post('/test-results/{id}', [ResultController::class, 'update']);
+
+
+Route::get('/clinics/statistics', [StatisticController::class, 'getClinicStatistics']);
