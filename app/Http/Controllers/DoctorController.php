@@ -13,12 +13,30 @@ use Illuminate\Validation\ValidationException;
 
 class DoctorController extends Controller
 {
-    public function index()
+    public function index(Request $request)
+    {
+        $clinic = auth()->user();
+        $perPage = $request->input('per_page', 10);
+
+        $doctors = User::role('doctor')->where('clinic_id', $clinic->id)
+            ->orderBy('created_at', 'desc')
+            ->paginate($perPage);
+
+        return response()->json([
+            'data' => $doctors,
+            'current_page' => $request->input('page', 1),
+            'last_page' => $doctors->lastPage(),
+            'total' => $doctors->total(),
+        ]);
+    }
+
+    public function getAllDoctors()
     {
         $clinic = auth()->user();
 
-        $doctors = User::role('doctor')->where('clinic_id', $clinic->id)->get();
-
+        $doctors = User::role('doctor')->where('clinic_id', $clinic->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
         return response()->json($doctors);
     }
 
