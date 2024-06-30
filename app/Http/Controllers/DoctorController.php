@@ -17,8 +17,13 @@ class DoctorController extends Controller
     {
         $clinic = auth()->user();
         $perPage = $request->input('per_page', 10);
+        $search = $request->input('search');
 
         $doctors = User::role('doctor')->where('clinic_id', $clinic->id)
+            ->when($search, function ($query, $search) {
+                return $query->where('name', 'like', '%' . $search . '%')
+                    ->orWhere('surname', 'like', '%' . $search . '%');
+            })
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);
 

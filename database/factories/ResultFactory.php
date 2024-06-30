@@ -12,6 +12,8 @@ class ResultFactory extends Factory
 {
     protected $model = Result::class;
 
+    private static $existingPatients = [];
+
     public function definition()
     {
         $doctorIds = User::role('doctor')->pluck('id')->random(2)->toArray();
@@ -44,18 +46,34 @@ class ResultFactory extends Factory
             '13234567890', '14234567890', '15234567890', '16234567890',
             '17234567890', '18234567890', '19234567890', '20234567890',
         ];
-        $idNumber = $this->faker->randomElement($idNumbersPool);
 
-        return [
-            'patientName' => $this->faker->firstName,
-            'surname' => $this->faker->lastName,
-            'dob' => $this->faker->date,
+        $usePoolIdNumber = $this->faker->boolean(60);
+        if ($usePoolIdNumber) {
+            $idNumber = $this->faker->randomElement($idNumbersPool);
+        } else {
+            $idNumber = $this->faker->unique()->numerify('###########');
+        }
+
+        if (array_key_exists($idNumber, self::$existingPatients)) {
+            $patient = self::$existingPatients[$idNumber];
+        } else {
+            $patient = [
+                'patientName' => $this->faker->firstName,
+                'surname' => $this->faker->lastName,
+                'dob' => $this->faker->date,
+            ];
+            if ($usePoolIdNumber) {
+                self::$existingPatients[$idNumber] = $patient;
+            }
+        }
+
+        return array_merge($patient, [
             'idNumber' => $idNumber,
             'testType' => $testType,
             'doctor_ids' => json_encode($doctorIds),
             'testResult' => 'test_results/' . $this->faker->uuid . '.pdf',
             'clinic_id' => User::role('clinic')->inRandomOrder()->first()->id,
             'created_at' => $createdAt,
-        ];
+        ]);
     }
 }

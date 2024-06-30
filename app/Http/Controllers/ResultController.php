@@ -7,6 +7,7 @@ use App\Models\TestResult;
 use App\Models\Type;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
@@ -52,17 +53,57 @@ class ResultController extends Controller
     {
         $user = Auth::user();
         $perPage = $request->input('per_page', 10);
+        $search = $request->input('search');
+        $results = null;
 
         if ($user->hasRole('clinic')) {
-            $results = Result::where('clinic_id', $user->id)
-                ->orderBy('created_at', 'desc')
-                ->paginate($perPage);
+            $query = Result::where('clinic_id', $user->id)->orderBy('created_at', 'desc');
+
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('patientName', 'like', '%' . $search . '%')
+                        ->orWhere('surname', 'like', '%' . $search . '%')
+                        ->orWhere('idNumber', 'like', '%' . $search . '%');
+                });
+            }
+
+            $results = $query->paginate($perPage);
         } elseif ($user->hasRole('doctor')) {
-            $results = Result::all()->filter(function ($result) use ($user) {
-                $doctorIds = json_decode($result->doctor_ids, true);
-                return in_array($user->id, $doctorIds);
-            })->values();
-            $results = collect($results)->forPage($request->input('page', 1), $perPage);
+            $query = Result::whereJsonContains('doctor_ids', $user->id)->orderBy('created_at', 'desc');
+
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('patientName', 'like', '%' . $search . '%')
+                        ->orWhere('surname', 'like', '%' . $search . '%')
+                        ->orWhere('idNumber', 'like', '%' . $search . '%');
+                });
+            }
+
+            $results = $query->paginate($perPage);
+
+            if ($results->isEmpty()) {
+                $results = Result::all()->filter(function ($result) use ($user) {
+                    $doctorIds = json_decode($result->doctor_ids, true);
+                    return in_array($user->id, $doctorIds);
+                })->values();
+
+                if ($search) {
+                    $results = $results->filter(function ($result) use ($search) {
+                        return stripos($result->patientName, $search) !== false ||
+                            stripos($result->surname, $search) !== false ||
+                            stripos($result->idNumber, $search) !== false;
+                    })->values();
+                }
+
+                $results = $results->forPage($request->input('page', 1), $perPage);
+                $results = new \Illuminate\Pagination\LengthAwarePaginator(
+                    $results,
+                    $results->count(),
+                    $perPage,
+                    $request->input('page', 1),
+                    ['path' => $request->url(), 'query' => $request->query()]
+                );
+            }
         } else {
             return response()->json(['message' => 'Unauthorized user role'], 403);
         }
