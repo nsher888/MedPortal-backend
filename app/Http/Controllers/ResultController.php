@@ -31,7 +31,11 @@ class ResultController extends Controller
             'testResult' => 'required|file|mimes:pdf,jpg,png',
         ]);
 
-        $path = $request->file('testResult')->store('test_results', 'public');
+        $file = $request->file('testResult');
+        $filePath = 'test_results/' . $file->getClientOriginalName();
+
+        // Store the file on S3 without public-read ACL
+        $path = $file->storeAs('test_results', $file->getClientOriginalName(), 's3');
 
         $doctorIds = $isDoctor ? [Auth::id()] : $validated['doctor'];
 
@@ -42,12 +46,13 @@ class ResultController extends Controller
             'idNumber' => $validated['idNumber'],
             'testType' => $validated['testType'],
             'doctor_ids' => json_encode($doctorIds),
-            'testResult' => $path,
+            'testResult' => $filePath,
             'clinic_id' => $clinicId,
         ]);
 
         return response()->json(['message' => 'Test result added successfully', 'data' => $testResult], 201);
     }
+
 
     public function index(Request $request)
     {
@@ -135,6 +140,15 @@ class ResultController extends Controller
     public function destroy($id)
     {
         $result = Result::find($id);
+
+        if (!$result) {
+            return response()->json(['message' => 'Result not found'], 404);
+        }
+
+        if (Storage::disk('s3')->exists($result->testResult)) {
+            Storage::disk('s3')->delete($result->testResult);
+        }
+
         $result->delete();
 
         return response()->json(['message' => 'Result deleted']);
@@ -144,6 +158,26 @@ class ResultController extends Controller
     {
         $result = Result::find($id);
 
+        if (!$result) {
+            return response()->json(['message' => 'Result not found'], 404);
+        }
+
+        // Check user authorization
+        $user = Auth::user();
+        if ($user->hasRole('clinic') && $result->clinic_id !== $user->id) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        } elseif ($user->hasRole('doctor') && !in_array($user->id, json_decode($result->doctor_ids, true))) {
+            return response()->json(['message' => 'Unauthorized'], 403);
+        } elseif (!$user->hasRole('clinic') && !$user->hasRole('doctor')) {
+            return response()->json(['message' => 'Unauthorized user role'], 403);
+        }
+
+        // Generate pre-signed URL for the file
+        $url = Storage::disk('s3')->temporaryUrl(
+            $result->testResult,
+            now()->addMinutes(15)
+        );
+
         return [
             'id' => $result->id,
             'patientName' => $result->patientName,
@@ -152,7 +186,7 @@ class ResultController extends Controller
             'idNumber' => $result->idNumber,
             'testType' => $result->testTypeName,
             'doctorNames' => $result->doctorNames,
-            'testResult' => Storage::url($result->testResult),
+            'testResult' => $url,
             'created_at' => $result->created_at,
             'updated_at' => $result->updated_at,
             'clinic_id' => $result->clinic_id,
@@ -187,9 +221,17 @@ class ResultController extends Controller
         }
 
         if ($request->hasFile('testResult')) {
-            Storage::disk('public')->delete($result->testResult);
-            $path = $request->file('testResult')->store('test_results', 'public');
-            $result->testResult = $path;
+            Storage::disk('s3')->delete($result->testResult);
+
+            $file = $request->file('testResult');
+            $filePath = 'test_results/' . $file->getClientOriginalName();
+
+            $path = $file->storeAs('test_results', $file->getClientOriginalName(), [
+                'disk' => 's3',
+                'visibility' => 'public',
+            ]);
+
+            $result->testResult = $filePath;
         }
 
         if ($request->has('doctor')) {

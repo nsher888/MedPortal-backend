@@ -32,11 +32,18 @@ class ResultFactory extends Factory
         ));
 
         $types = Type::pluck('id')->toArray();
+        $randomTopTypes = $this->faker->randomElements($types, 10);
         $weightedTypes = [];
+
         foreach ($types as $type) {
-            $weight = $this->faker->numberBetween(1, 10);
+            if (in_array($type, $randomTopTypes)) {
+                $weight = $this->faker->numberBetween(50, 100);
+            } else {
+                $weight = $this->faker->numberBetween(1, 5);
+            }
             $weightedTypes = array_merge($weightedTypes, array_fill(0, $weight, $type));
         }
+
         $testType = $this->faker->randomElement($weightedTypes);
 
         $idNumbersPool = [
