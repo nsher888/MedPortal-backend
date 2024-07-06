@@ -13,16 +13,27 @@ use Illuminate\Validation\ValidationException;
 
 class DoctorController extends Controller
 {
+
+
+
+
     public function index(Request $request)
     {
         $clinic = auth()->user();
         $perPage = $request->input('per_page', 10);
         $search = $request->input('search');
 
-        $doctors = User::role('doctor')->where('clinic_id', $clinic->id)
+        $doctors = User::role('doctor')
+            ->where('clinic_id', $clinic->id)
             ->when($search, function ($query, $search) {
-                return $query->where('name', 'like', '%' . $search . '%')
-                    ->orWhere('surname', 'like', '%' . $search . '%');
+                $terms = explode(' ', $search); // Split the search input into terms
+
+                foreach ($terms as $term) {
+                    $query->where(function ($query) use ($term) {
+                        $query->where('name', 'like', '%' . $term . '%')
+                            ->orWhere('surname', 'like', '%' . $term . '%');
+                    });
+                }
             })
             ->orderBy('created_at', 'desc')
             ->paginate($perPage);

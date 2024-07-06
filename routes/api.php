@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\DoctorController;
+use App\Http\Controllers\PatientController;
 use App\Http\Controllers\ResultController;
 use App\Http\Controllers\StatisticController;
+use App\Http\Controllers\SuggestionController;
 use App\Http\Controllers\TypeController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -32,6 +34,8 @@ Route::delete('/doctors/{id}', [DoctorController::class, 'destroy']);
 Route::get('/doctors/{id}', [DoctorController::class, 'show']);
 Route::post('/doctors/{id}', [DoctorController::class, 'updateDoctor']);
 Route::post('/doctors', [DoctorController::class, 'store']);
+Route::get('/suggestions', [SuggestionController::class, 'getSuggestions']);
+
 
 
 Route::get('/types', [TypeController::class, 'index']);
@@ -46,3 +50,5 @@ Route::post('/test-results/{id}', [ResultController::class, 'update']);
 
 
 Route::get('/clinics/statistics', [StatisticController::class, 'getClinicStatistics']);
+
+Route::get('/patients/results', [PatientController::class, 'index']);
