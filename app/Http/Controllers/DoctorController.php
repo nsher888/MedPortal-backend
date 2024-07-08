@@ -46,13 +46,22 @@ class DoctorController extends Controller
         ]);
     }
 
-    public function getAllDoctors()
+    public function getAllDoctors(Request $request)
     {
         $clinic = auth()->user();
+        $search = $request->input('search');
 
-        $doctors = User::role('doctor')->where('clinic_id', $clinic->id)
-            ->orderBy('created_at', 'desc')
-            ->get();
+        $query = User::role('doctor')->where('clinic_id', $clinic->id);
+
+        if ($search) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                    ->orWhere('surname', 'like', "%{$search}%")
+                    ->orWhere('email', 'like', "%{$search}%");
+            });
+        }
+
+        $doctors = $query->orderBy('created_at', 'desc')->get();
         return response()->json($doctors);
     }
 

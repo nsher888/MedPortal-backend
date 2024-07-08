@@ -34,7 +34,7 @@ Route::delete('/doctors/{id}', [DoctorController::class, 'destroy']);
 Route::get('/doctors/{id}', [DoctorController::class, 'show']);
 Route::post('/doctors/{id}', [DoctorController::class, 'updateDoctor']);
 Route::post('/doctors', [DoctorController::class, 'store']);
-Route::get('/suggestions', [SuggestionController::class, 'getSuggestions']);
+Route::get('/doctors/suggestions', [SuggestionController::class, 'getSuggestions']);
 
 
 
