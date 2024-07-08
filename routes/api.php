@@ -52,3 +52,5 @@ Route::post('/test-results/{id}', [ResultController::class, 'update']);
 Route::get('/clinics/statistics', [StatisticController::class, 'getClinicStatistics']);
 
 Route::get('/patients/results', [PatientController::class, 'index']);
+
+Route::get('/patient/clinics', [PatientController::class, 'getAllClinics']);
