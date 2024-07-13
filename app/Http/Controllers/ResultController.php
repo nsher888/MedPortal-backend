@@ -65,11 +65,14 @@ class ResultController extends Controller
             $query = Result::where('clinic_id', $user->id)->orderBy('created_at', 'desc');
 
             if ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('patientName', 'like', '%' . $search . '%')
-                        ->orWhere('surname', 'like', '%' . $search . '%')
-                        ->orWhere('idNumber', 'like', '%' . $search . '%');
-                });
+                $searchTerms = explode(' ', $search);
+                foreach ($searchTerms as $term) {
+                    $query->where(function ($q) use ($term) {
+                        $q->where('patientName', 'like', '%' . $term . '%')
+                            ->orWhere('surname', 'like', '%' . $term . '%')
+                            ->orWhere('idNumber', 'like', '%' . $term . '%');
+                    });
+                }
             }
 
             $results = $query->paginate($perPage);
@@ -77,11 +80,14 @@ class ResultController extends Controller
             $query = Result::whereJsonContains('doctor_ids', $user->id)->orderBy('created_at', 'desc');
 
             if ($search) {
-                $query->where(function ($q) use ($search) {
-                    $q->where('patientName', 'like', '%' . $search . '%')
-                        ->orWhere('surname', 'like', '%' . $search . '%')
-                        ->orWhere('idNumber', 'like', '%' . $search . '%');
-                });
+                $searchTerms = explode(' ', $search);
+                foreach ($searchTerms as $term) {
+                    $query->where(function ($q) use ($term) {
+                        $q->where('patientName', 'like', '%' . $term . '%')
+                            ->orWhere('surname', 'like', '%' . $term . '%')
+                            ->orWhere('idNumber', 'like', '%' . $term . '%');
+                    });
+                }
             }
 
             $results = $query->paginate($perPage);
@@ -93,11 +99,14 @@ class ResultController extends Controller
                 })->values();
 
                 if ($search) {
-                    $results = $results->filter(function ($result) use ($search) {
-                        return stripos($result->patientName, $search) !== false ||
-                            stripos($result->surname, $search) !== false ||
-                            stripos($result->idNumber, $search) !== false;
-                    })->values();
+                    $searchTerms = explode(' ', $search);
+                    foreach ($searchTerms as $term) {
+                        $results = $results->filter(function ($result) use ($term) {
+                            return stripos($result->patientName, $term) !== false ||
+                                stripos($result->surname, $term) !== false ||
+                                stripos($result->idNumber, $term) !== false;
+                        })->values();
+                    }
                 }
 
                 $results = $results->forPage($request->input('page', 1), $perPage);
@@ -135,6 +144,50 @@ class ResultController extends Controller
             'last_page' => $results->lastPage(),
             'total' => $results->total()
         ]);
+    }
+
+    public function getResultsSuggestions(Request $request)
+    {
+        $user = Auth::user();
+        $search = $request->input('search');
+        $results = null;
+
+        if ($user->hasRole('clinic')) {
+            $results = Result::where('clinic_id', $user->id)
+                ->where(function ($query) use ($search) {
+                    $query->where('patientName', 'like', '%' . $search . '%')
+                        ->orWhere('surname', 'like', '%' . $search . '%')
+                        ->orWhere('idNumber', 'like', '%' . $search . '%');
+                })
+                ->get();
+        } elseif ($user->hasRole('doctor')) {
+            $results = Result::whereJsonContains('doctor_ids', $user->id)
+                ->where(function ($query) use ($search) {
+                    $query->where('patientName', 'like', '%' . $search . '%')
+                        ->orWhere('surname', 'like', '%' . $search . '%')
+                        ->orWhere('idNumber', 'like', '%' . $search . '%');
+                })
+                ->get();
+        } else {
+            return response()->json(['message' => 'Unauthorized'], 401);
+        }
+
+        $results->transform(function ($result) {
+            return [
+                'id' => $result->id,
+                'patientName' => $result->patientName,
+                'surname' => $result->surname,
+                'dob' => $result->dob,
+                'idNumber' => $result->idNumber,
+                'testType' => Type::find($result->testType)->name,
+                'testResult' => Storage::url($result->testResult),
+                'created_at' => $result->created_at,
+                'updated_at' => $result->updated_at,
+                'clinic_id' => $result->clinic_id,
+            ];
+        });
+
+        return response()->json($results);
     }
 
     public function destroy($id)

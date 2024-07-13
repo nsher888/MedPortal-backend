@@ -13,10 +13,6 @@ use Illuminate\Validation\ValidationException;
 
 class DoctorController extends Controller
 {
-
-
-
-
     public function index(Request $request)
     {
         $clinic = auth()->user();
@@ -56,8 +52,7 @@ class DoctorController extends Controller
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('surname', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('surname', 'like', "%{$search}%");
             });
         }
 
