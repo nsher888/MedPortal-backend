@@ -14,11 +14,6 @@ class HelpController extends Controller
 
         Log::info('Authenticated User:', ['user' => $clinic]);
 
-        if (!$clinic || !$clinic->hasRole('clinic')) {
-            Log::warning('Unauthorized access attempt by user:', ['user' => $clinic]);
-            return response()->json(['error' => 'Unauthorized'], 403);
-        }
-
         $doctors = User::role('doctor')->where('clinic_id', $clinic->id)->get();
 
         Log::info('Fetched doctors:', ['doctors' => $doctors]);

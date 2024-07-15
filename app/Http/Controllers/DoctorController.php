@@ -22,7 +22,7 @@ class DoctorController extends Controller
         $doctors = User::role('doctor')
             ->where('clinic_id', $clinic->id)
             ->when($search, function ($query, $search) {
-                $terms = explode(' ', $search); // Split the search input into terms
+                $terms = explode(' ', $search);
 
                 foreach ($terms as $term) {
                     $query->where(function ($query) use ($term) {
@@ -65,6 +65,12 @@ class DoctorController extends Controller
         $doctor = User::role('doctor')->find($id);
         $doctor->delete();
         return response()->json(['message' => 'Doctor deleted']);
+    }
+
+    public function getDoctorsByClinic($clinicId)
+    {
+        $doctors = User::role('doctor')->where('clinic_id', $clinicId)->get();
+        return response()->json($doctors);
     }
 
     public function show($id)

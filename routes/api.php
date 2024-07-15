@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\AppointmentController;
+use App\Http\Controllers\DoctorAvailabilityController;
 use App\Http\Controllers\DoctorController;
 use App\Http\Controllers\HelpController;
 use App\Http\Controllers\PatientController;
@@ -64,3 +66,20 @@ Route::get('/patient/clinics', [PatientController::class, 'getAllClinics']);
 
 
 Route::get('/doctor-list', [HelpController::class, 'doctorsList']);
+
+
+Route::post('/availabilities', [DoctorAvailabilityController::class, 'store']);
+Route::get('/availabilities', [DoctorAvailabilityController::class, 'index']);
+Route::post('/availabilities/multiple', [DoctorAvailabilityController::class, 'storeMultiple']);
+Route::delete('/availabilities/{id}', [DoctorAvailabilityController::class, 'cancelAvailability']);
+Route::get('/time-slots', [DoctorAvailabilityController::class, 'getAvailableTimeSlots']);
+
+
+Route::post('/appointments', [AppointmentController::class, 'book']);
+Route::get('/appointments', [AppointmentController::class, 'index']);
+
+Route::get('/appointments/dates/{id}', [DoctorAvailabilityController::class, 'getAvailableDates']);
+Route::delete('/appointments/{id}', [AppointmentController::class, 'cancelAppointment']);
+
+
+Route::get('/clinics/{clinicId}/doctors', [DoctorController::class, 'getDoctorsByClinic']);

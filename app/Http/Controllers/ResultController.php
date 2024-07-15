@@ -168,6 +168,17 @@ class ResultController extends Controller
                         ->orWhere('idNumber', 'like', '%' . $search . '%');
                 })
                 ->get();
+
+            if ($results->isEmpty()) {
+                $results = Result::all()->filter(function ($result) use ($user) {
+                    $doctorIds = json_decode($result->doctor_ids, true);
+                    return in_array($user->id, $doctorIds);
+                })->filter(function ($result) use ($search) {
+                    return stripos($result->patientName, $search) !== false ||
+                        stripos($result->surname, $search) !== false ||
+                        stripos($result->idNumber, $search) !== false;
+                })->values();
+            }
         } else {
             return response()->json(['message' => 'Unauthorized'], 401);
         }
@@ -189,7 +200,6 @@ class ResultController extends Controller
 
         return response()->json($results);
     }
-
     public function destroy($id)
     {
         $result = Result::find($id);
