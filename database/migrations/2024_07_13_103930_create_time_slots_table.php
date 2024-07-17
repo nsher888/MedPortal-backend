@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('doctor_id');
             $table->date('date');
             $table->time('start_time');
-            $table->enum('status', ['free', 'booked'])->default('free');
+            $table->enum('status', ['free', 'booked', 'unavailable'])->default('free');
             $table->timestamps();
 
             $table->foreign('doctor_id')->references('id')->on('users')->onDelete('cascade');

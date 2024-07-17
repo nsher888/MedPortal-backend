@@ -125,6 +125,81 @@ class DoctorAvailabilityController extends Controller
         return response()->json($timeSlots);
     }
 
+    public function getDoctorTimeSlots(Request $request)
+    {
+        $request->validate([
+            'date' => 'required|date',
+        ]);
+
+        $doctor_id = auth()->user()->id;
+
+        $timeSlots = TimeSlot::where('doctor_id', $doctor_id)
+            ->where('date', $request->date)
+            ->leftJoin('users', 'time_slots.patient_id', '=', 'users.id')
+            ->select('time_slots.*', 'users.name as patient_name', 'users.surname as patient_surname')
+            ->get();
+
+        return response()->json($timeSlots);
+    }
+
+    public function cancelTimeSlot($id)
+    {
+        $timeSlot = TimeSlot::find($id);
+
+        if (!$timeSlot) {
+            return response()->json(['message' => 'Time slot not found'], 404);
+        }
+
+        $timeSlot->delete();
+
+        return response()->json(['message' => 'Time slot canceled successfully']);
+    }
+
+    public function makeTimeSlotUnAvailable($id)
+    {
+        $timeSlot = TimeSlot::find($id);
+
+        if (!$timeSlot) {
+            return response()->json(['message' => 'Time slot not found'], 404);
+        }
+
+        $timeSlot->update(['status' => 'unavailable']);
+
+        return response()->json(['message' => 'Time slot is now unavailable']);
+    }
+
+    public function changeTimeSlotStatus($id)
+    {
+        $timeSlot = TimeSlot::find($id);
+
+        if (!$timeSlot) {
+            return response()->json(['message' => 'Time slot not found'], 404);
+        }
+
+        if ($timeSlot->status == 'booked') {
+            return response()->json(['message' => 'Time slot is booked and cannot be changed'], 400);
+        }
+
+        $newStatus = $timeSlot->status == 'free' ? 'unavailable' : 'free';
+        $timeSlot->update(['status' => $newStatus]);
+
+        return response()->json(['message' => "Time slot is now $newStatus"]);
+    }
+
+
+    public function makeTimeSotAvailable($id)
+    {
+        $timeSlot = TimeSlot::find($id);
+
+        if (!$timeSlot) {
+            return response()->json(['message' => 'Time slot not found'], 404);
+        }
+
+        $timeSlot->update(['status' => 'free']);
+
+        return response()->json(['message' => 'Time slot is now available']);
+    }
+
     public function getAvailableDates($id)
     {
         $dates = DoctorAvailability::where('doctor_id', $id)

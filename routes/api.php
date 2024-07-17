@@ -74,6 +74,11 @@ Route::post('/availabilities/multiple', [DoctorAvailabilityController::class, 's
 Route::delete('/availabilities/{id}', [DoctorAvailabilityController::class, 'cancelAvailability']);
 Route::get('/time-slots', [DoctorAvailabilityController::class, 'getAvailableTimeSlots']);
 
+Route::get('/time-slots/doctor', [DoctorAvailabilityController::class, 'getDoctorTimeSlots']);
+Route::delete('/time-slots/{id}', [DoctorAvailabilityController::class, 'cancelTimeSlot']);
+Route::post('/time-slots/{id}', [DoctorAvailabilityController::class, 'changeTimeSlotStatus']);
+// Route::post('/time-slots/available/{id}', [DoctorAvailabilityController::class, 'makeTimeSlotAvailable']);
+
 
 Route::post('/appointments', [AppointmentController::class, 'book']);
 Route::get('/appointments', [AppointmentController::class, 'index']);
