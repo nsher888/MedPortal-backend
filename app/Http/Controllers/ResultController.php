@@ -93,26 +93,28 @@ class ResultController extends Controller
             $results = $query->paginate($perPage);
 
             if ($results->isEmpty()) {
-                $results = Result::all()->filter(function ($result) use ($user) {
+                $allResults = Result::all()->filter(function ($result) use ($user) {
                     $doctorIds = json_decode($result->doctor_ids, true);
                     return in_array($user->id, $doctorIds);
-                })->values();
+                });
 
                 if ($search) {
                     $searchTerms = explode(' ', $search);
                     foreach ($searchTerms as $term) {
-                        $results = $results->filter(function ($result) use ($term) {
+                        $allResults = $allResults->filter(function ($result) use ($term) {
                             return stripos($result->patientName, $term) !== false ||
                                 stripos($result->surname, $term) !== false ||
                                 stripos($result->idNumber, $term) !== false;
-                        })->values();
+                        });
                     }
                 }
 
-                $results = $results->forPage($request->input('page', 1), $perPage);
+                $total = $allResults->count();
+                $results = $allResults->forPage($request->input('page', 1), $perPage)->values();
+
                 $results = new \Illuminate\Pagination\LengthAwarePaginator(
                     $results,
-                    $results->count(),
+                    $total,
                     $perPage,
                     $request->input('page', 1),
                     ['path' => $request->url(), 'query' => $request->query()]
@@ -140,11 +142,12 @@ class ResultController extends Controller
 
         return response()->json([
             'data' => $results,
-            'current_page' => $request->input('page', 1),
+            'current_page' => $results->currentPage(),
             'last_page' => $results->lastPage(),
             'total' => $results->total()
         ]);
     }
+
 
     public function getResultsSuggestions(Request $request)
     {
