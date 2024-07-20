@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\AppointmentBooked;
 use App\Models\TimeSlot;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -32,8 +34,29 @@ class AppointmentController extends Controller
 
         Log::info('Appointment booked successfully');
 
+        $receiver = User::find($request->doctor_id);
+        $sender = User::find(auth()->id());
+
+        $appointmentDateTime = Carbon::createFromFormat('Y-m-d H:i:s', "{$timeSlot->date} {$timeSlot->start_time}");
+        $formattedDateTime = $appointmentDateTime->format('Y-m-d H:i:s');
+
+        $patientName = "{$sender->name} {$sender->surname}";
+        $message = "Appointment booked on {$formattedDateTime} with patient {$patientName}";
+
+        // Create the notification in the database
+        $notification = $receiver->notifications()->create([
+            'message' => $message,
+            'read' => false,
+        ]);
+
+        // Broadcast the event with the notification data
+        broadcast(new AppointmentBooked($notification));
+
         return response()->json(['message' => 'Appointment booked successfully']);
     }
+
+
+
 
     public function cancelAppointment(Request $request, $id)
     {

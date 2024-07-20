@@ -88,3 +88,15 @@ Route::delete('/appointments/{id}', [AppointmentController::class, 'cancelAppoin
 
 
 Route::get('/clinics/{clinicId}/doctors', [DoctorController::class, 'getDoctorsByClinic']);
+
+
+
+Route::get('/notifications', function (Request $request) {
+    return $request->user()->notifications()->where('read', false)->get();
+});
+
+Route::post('/notifications/read', function (Request $request) {
+    $notificationIds = $request->input('notification_ids');
+    $request->user()->notifications()->whereIn('id', $notificationIds)->update(['read' => true]);
+    return response()->json(['message' => 'Notifications marked as read']);
+});
