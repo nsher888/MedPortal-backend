@@ -2,10 +2,9 @@
 
 namespace App\Events;
 
-use App\Models\User;
+use App\Models\Notification;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
@@ -16,12 +15,14 @@ class AppointmentBooked implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
+    public $notification;
+
     /**
      * Create a new event instance.
      */
-    public function __construct(public User $receiver, public User $sender, public string $message)
+    public function __construct(Notification $notification)
     {
-        //
+        $this->notification = $notification;
     }
 
     /**
@@ -31,14 +32,24 @@ class AppointmentBooked implements ShouldBroadcast
      */
     public function broadcastOn(): array
     {
-        Log::info("Broadcasting AppointmentBooked event for receiver ID: {$this->receiver->id}", [
-            'sender_id' => $this->sender->id,
-            'receiver_id' => $this->receiver->id,
-            'message' => $this->message,
+        Log::info("Broadcasting AppointmentBooked event for receiver ID: {$this->notification->user_id}", [
+            'notification' => $this->notification,
         ]);
 
         return [
-            new PrivateChannel("appointment.{$this->receiver->id}"),
+            new PrivateChannel("appointment.{$this->notification->user_id}"),
+        ];
+    }
+
+    public function broadcastWith()
+    {
+        return [
+            'id' => $this->notification->id,
+            'user_id' => $this->notification->user_id,
+            'message' => $this->notification->message,
+            'read' => $this->notification->read,
+            'created_at' => $this->notification->created_at,
+            'updated_at' => $this->notification->updated_at,
         ];
     }
 }

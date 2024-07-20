@@ -58,6 +58,11 @@ class User extends Authenticatable
         return $this->belongsToMany(Result::class, 'doctor_result', 'doctor_id', 'result_id');
     }
 
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class);
+    }
+
     /**
      * Get the attributes that should be cast.
      *

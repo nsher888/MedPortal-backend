@@ -37,16 +37,24 @@ class AppointmentController extends Controller
         $receiver = User::find($request->doctor_id);
         $sender = User::find(auth()->id());
 
-        $appointmentDateTime = \Carbon\Carbon::createFromFormat('Y-m-d H:i:s', "{$timeSlot->date} {$timeSlot->start_time}");
+        $appointmentDateTime = Carbon::createFromFormat('Y-m-d H:i:s', "{$timeSlot->date} {$timeSlot->start_time}");
         $formattedDateTime = $appointmentDateTime->format('Y-m-d H:i:s');
 
         $patientName = "{$sender->name} {$sender->surname}";
         $message = "Appointment booked on {$formattedDateTime} with patient {$patientName}";
 
-        broadcast(new AppointmentBooked($receiver, $sender, $message));
+        // Create the notification in the database
+        $notification = $receiver->notifications()->create([
+            'message' => $message,
+            'read' => false,
+        ]);
+
+        // Broadcast the event with the notification data
+        broadcast(new AppointmentBooked($notification));
 
         return response()->json(['message' => 'Appointment booked successfully']);
     }
+
 
 
 
