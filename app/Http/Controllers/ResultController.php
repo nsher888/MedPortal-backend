@@ -109,6 +109,8 @@ class ResultController extends Controller
                     }
                 }
 
+                // Ensure the results are sorted by created_at in descending order
+                $allResults = $allResults->sortByDesc('created_at');
                 $total = $allResults->count();
                 $results = $allResults->forPage($request->input('page', 1), $perPage)->values();
 
@@ -133,7 +135,10 @@ class ResultController extends Controller
                 'idNumber' => $result->idNumber,
                 'testType' => Type::find($result->testType)->name,
                 'doctorNames' => User::whereIn('id', json_decode($result->doctor_ids))->pluck('name')->toArray(),
-                'testResult' => Storage::url($result->testResult),
+                'testResult' => Storage::disk('s3')->temporaryUrl(
+                    $result->testResult,
+                    now()->addMinutes(15)
+                ),
                 'created_at' => $result->created_at,
                 'updated_at' => $result->updated_at,
                 'clinic_id' => $result->clinic_id,
@@ -147,6 +152,7 @@ class ResultController extends Controller
             'total' => $results->total()
         ]);
     }
+
 
 
     public function getResultsSuggestions(Request $request)

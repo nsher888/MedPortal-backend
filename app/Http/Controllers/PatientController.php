@@ -48,7 +48,10 @@ class PatientController extends Controller
                     'doctorNames' => $doctors->map(function ($doctor) {
                         return $doctor->name . ' ' . $doctor->surname;
                     })->toArray(),
-                    'testResult' => Storage::url($result->testResult),
+                    'testResult' => Storage::disk('s3')->temporaryUrl(
+                        $result->testResult,
+                        now()->addMinutes(15)
+                    ),
                     'created_at' => $result->created_at,
                     'updated_at' => $result->updated_at,
                     'clinicName' => $clinic ? $clinic->name : 'Unknown',
