@@ -25,11 +25,9 @@ class PatientController extends Controller
                 $query->whereBetween('created_at', [$startDate, $endDate]);
             }
 
-            // Apply sorting
-            if ($request->has('sortOrder')) {
-                $sortOrder = $request->input('sortOrder');
-                $query->orderBy('created_at', $sortOrder);
-            }
+            // Apply sorting, default to 'desc' for latest first
+            $sortOrder = $request->input('sortOrder', 'desc');
+            $query->orderBy('created_at', $sortOrder);
 
             $results = $query->get();
 
@@ -69,6 +67,7 @@ class PatientController extends Controller
             ], 401);
         }
     }
+
 
     public function getAllClinics()
     {
